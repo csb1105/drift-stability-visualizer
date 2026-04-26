@@ -1,3 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Drift-Stability Visualizer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family: Arial, sans-serif; background:#f8fafc; margin:0; }
+.container { max-width:1000px; margin:auto; padding:20px; }
+.section { background:#fff; padding:20px; margin-bottom:20px; border:1px solid #ddd; }
+.row { display:flex; gap:20px; }
+.col { flex:1; }
+input[type=range] { width:100%; }
+canvas { width:100%; height:220px; }
+.status { font-size:26px; font-weight:bold; margin-bottom:10px; }
+.small { font-size:14px; color:#444; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Drift-Stability Visualizer</h1>
+<p><i>See instability before failure becomes visible.</i></p>
+
+<div class="section">
+<h2>Drift Accumulation</h2>
+<canvas id="driftChart"></canvas>
+<p class="small">
+Drift accelerates before visible failure. Crossing the threshold marks loss of recovery.
+</p>
+</div>
+
+<div class="row">
+
+<div class="section col">
+<h2>Inputs</h2>
+
+<div class="small" style="margin-bottom:15px;">
+• Drift = internal instability<br>
+• Pressure = external demand<br>
+• Ambiguity = signal uncertainty<br>
+• Correction Capacity = ability to fix
+</div>
+
+Drift: <span id="driftVal">70</span>
+<input id="drift" type="range" min="0" max="100" value="70">
+
+Pressure: <span id="pressureVal">60</span>
+<input id="pressure" type="range" min="0" max="100" value="60">
+
+Ambiguity: <span id="ambiguityVal">50</span>
+<input id="ambiguity" type="range" min="0" max="100" value="50">
+
+Correction Capacity: <span id="capacityVal">40</span>
+<input id="capacity" type="range" min="0" max="100" value="40">
+
+</div>
+
+<div class="section col">
+<h2>System State</h2>
+<div class="status" id="state">False Stability</div>
+<div id="risk"></div>
+<p class="small">
+Failure begins when correction capacity falls below drift pressure.
+</p>
+</div>
+
+</div>
+
+</div>
+
 <script>
 const driftInput = document.getElementById('drift');
 const pressureInput = document.getElementById('pressure');
@@ -35,13 +109,12 @@ function drawDrift(d, p, a, c) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // current position
   let currentX = canvas.width * intensity;
   let currentY = canvas.height - Math.pow(intensity, 2 + intensity * 3) * canvas.height;
 
   let crossed = currentY <= thresholdY;
 
-  // background tint if crossed
+  // background tint
   if (crossed) {
     ctx.fillStyle = "rgba(255,0,0,0.06)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -75,7 +148,7 @@ function drawDrift(d, p, a, c) {
     ctx.fill();
   }
 
-  // moving dot
+  // current system point
   ctx.beginPath();
   ctx.arc(currentX, currentY, 7, 0, Math.PI * 2);
   ctx.fillStyle = crossed ? "red" : "blue";
@@ -117,3 +190,6 @@ window.addEventListener('resize', () => {
 resizeCanvas();
 update();
 </script>
+
+</body>
+</html>

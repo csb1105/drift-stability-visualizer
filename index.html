@@ -171,11 +171,22 @@ function update() {
 
   risk.textContent = "Risk Score: " + Math.round(scaled);
 
-  if (scaled < 20) state.textContent = "Stable";
-  else if (scaled < 40) state.textContent = "Recoverable Drift";
-  else if (scaled < 70) state.textContent = "False Stability";
-  else state.textContent = "Failure Trajectory";
-
+ if (scaled < 20) {
+  state.textContent = "Stable";
+  state.style.color = "green";
+}
+else if (scaled < 40) {
+  state.textContent = "Recoverable Drift";
+  state.style.color = "orange";
+}
+else if (scaled < 70) {
+  state.textContent = "False Stability";
+  state.style.color = "#cc6600";
+}
+else {
+  state.textContent = "Failure Trajectory";
+  state.style.color = "red";
+}
   drawDrift(d, p, a, c);
 }
 

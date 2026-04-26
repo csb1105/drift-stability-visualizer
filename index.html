@@ -104,6 +104,19 @@ function drawDrift(d, p, a, c) {
   ctx.stroke();
   ctx.setLineDash([]);
 
+  // compute current position
+  let currentX = canvas.width * intensity;
+  let currentY = canvas.height - Math.pow(intensity,2 + intensity*3)*canvas.height;
+
+  // determine if system has crossed threshold
+  let crossed = currentY <= thresholdY;
+
+  // background tint when crossed
+  if (crossed) {
+    ctx.fillStyle = "rgba(255,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+
   // draw curve
   ctx.beginPath();
   ctx.moveTo(0, canvas.height);
@@ -119,6 +132,25 @@ function drawDrift(d, p, a, c) {
 
     ctx.lineTo(x, y);
   }
+
+  ctx.strokeStyle = crossed ? "red" : "black";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // draw collapse point
+  if (crossX) {
+    ctx.beginPath();
+    ctx.arc(crossX, thresholdY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "red";
+    ctx.fill();
+  }
+
+  // draw moving dot (current system)
+  ctx.beginPath();
+  ctx.arc(currentX, currentY, 7, 0, Math.PI * 2);
+  ctx.fillStyle = crossed ? "red" : "blue";
+  ctx.fill();
+}
 
   ctx.strokeStyle = "black";
   ctx.lineWidth = 2;

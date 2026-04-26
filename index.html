@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drift-Stability Visualizer</title>
+  <style>
+    body { margin:0; font-family:Arial, sans-serif; background:#f8fafc; }
+    .container { max-width:1200px; margin:auto; padding:20px; }
+    h1 { margin-bottom:5px; }
+    .section { background:#fff; padding:20px; margin-bottom:20px; border:1px solid #ddd; }
+    .row { display:flex; gap:20px; }
+    .col { flex:1; }
+    input[type=range]{ width:100%; }
+    canvas { width:100%; height:200px; }
+    .status { font-size:24px; font-weight:bold; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Drift-Stability Visualizer</h1>
+  <p>See instability before failure becomes visible.</p>
+
+  <!-- DRIFT GRAPH -->
+  <div class="section">
+    <h2>1. Drift Accumulation</h2>
+    <canvas id="driftChart"></canvas>
+    <p>Drift accumulates before systems appear to fail.</p>
+  </div>
+
+  <div class="row">
+
+    <!-- INPUTS -->
+    <div class="section col">
+      <h2>Inputs</h2>
+
+      Drift: <span id="driftVal">70</span>
+      <input id="drift" type="range" min="0" max="100" value="70">
+
+      Pressure: <span id="pressureVal">60</span>
+      <input id="pressure" type="range" min="0" max="100" value="60">
+
+      Ambiguity: <span id="ambiguityVal">50</span>
+      <input id="ambiguity" type="range" min="0" max="100" value="50">
+
+      Correction Capacity: <span id="capacityVal">40</span>
+      <input id="capacity" type="range" min="0" max="100" value="40">
+
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="section col">
+      <h2>Status</h2>
+      <div class="status" id="state">False Stability</div>
+      <div id="risk"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const driftInput = document.getElementById('drift');
+const pressureInput = document.getElementById('pressure');
+const ambiguityInput = document.getElementById('ambiguity');
+const capacityInput = document.getElementById('capacity');
+
+const driftVal = document.getElementById('driftVal');
+const pressureVal = document.getElementById('pressureVal');
+const ambiguityVal = document.getElementById('ambiguityVal');
+const capacityVal = document.getElementById('capacityVal');
+
+const state = document.getElementById('state');
+const risk = document.getElementById('risk');
+
+const canvas = document.getElementById('driftChart');
+const ctx = canvas.getContext('2d');
+canvas.width = canvas.offsetWidth;
+canvas.height = 200;
+
+function drawDrift() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height);
+
+  for(let x=0;x<canvas.width;x++){
+    let t = x/canvas.width;
+    let y = Math.pow(t,2);
+    ctx.lineTo(x, canvas.height - y*canvas.height);
+  }
+
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function update(){
+  let d = +driftInput.value;
+  let p = +pressureInput.value;
+  let a = +ambiguityInput.value;
+  let c = +capacityInput.value;
+
+  driftVal.textContent = d;
+  pressureVal.textContent = p;
+  ambiguityVal.textContent = a;
+  capacityVal.textContent = c;
+
+  let raw = d+p+a-c;
+  let scaled = Math.max(0, Math.min(100, (raw+100)/3));
+
+  risk.textContent = "Risk: " + Math.round(scaled);
+
+  if(scaled < 20) state.textContent = "Stable";
+  else if(scaled < 40) state.textContent = "Recoverable Drift";
+  else if(scaled < 70) state.textContent = "False Stability";
+  else state.textContent = "Failure Trajectory";
+
+  drawDrift();
+}
+
+[driftInput,pressureInput,ambiguityInput,capacityInput].forEach(i=>i.addEventListener('input',update));
+
+update();
+</script>
+
+</body>
+</html>

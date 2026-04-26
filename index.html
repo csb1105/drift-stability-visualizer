@@ -6,88 +6,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background:#f8fafc;
-  margin:0;
-}
-
-.container {
-  max-width:1000px;
-  margin:auto;
-  padding:20px;
-}
-
-.section {
-  background:#fff;
-  padding:20px;
-  margin-bottom:20px;
-  border:1px solid #ddd;
-}
-
-.row {
-  display:flex;
-  gap:20px;
-}
-
-.col {
-  flex:1;
-}
-
-input[type=range] {
-  width:100%;
-}
-
-canvas {
-  width:100%;
-  height:200px;
-}
-
-.status {
-  font-size:26px;
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
-.small {
-  font-size:14px;
-  color:#444;
-}
+body { font-family: Arial, sans-serif; background:#f8fafc; margin:0; }
+.container { max-width:1000px; margin:auto; padding:20px; }
+.section { background:#fff; padding:20px; margin-bottom:20px; border:1px solid #ddd; }
+.row { display:flex; gap:20px; }
+.col { flex:1; }
+input[type=range] { width:100%; }
+canvas { width:100%; height:220px; }
+.status { font-size:26px; font-weight:bold; margin-bottom:10px; }
+.small { font-size:14px; color:#444; }
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
 <h1>Drift-Stability Visualizer</h1>
 <p><i>See instability before failure becomes visible.</i></p>
 
-<!-- DRIFT GRAPH -->
 <div class="section">
 <h2>1. Drift Accumulation</h2>
-
 <canvas id="driftChart"></canvas>
-
-<p class="small">
-Drift accumulates silently. Systems often appear stable until they cross a threshold where recovery becomes impossible.
-</p>
-
+<p class="small">Drift accelerates before visible failure. Crossing the threshold marks loss of recovery.</p>
 </div>
 
 <div class="row">
 
-<!-- INPUTS -->
 <div class="section col">
-
 <h2>System Inputs</h2>
-
 <div class="small" style="margin-bottom:15px;">
 Adjust inputs to simulate system conditions.<br><br>
-• Drift = internal instability (noise, entropy)<br>
-• Pressure = external demand (time, load)<br>
-• Ambiguity = unclear or conflicting signals<br>
-• Correction Capacity = ability to detect and fix issues
+• Drift = internal instability<br>
+• Pressure = external demand<br>
+• Ambiguity = signal uncertainty<br>
+• Correction Capacity = ability to fix
 </div>
 
 Drift: <span id="driftVal">70</span>
@@ -104,20 +56,11 @@ Correction Capacity: <span id="capacityVal">40</span>
 
 </div>
 
-<!-- OUTPUT -->
 <div class="section col">
-
 <h2>System State</h2>
-
 <div class="status" id="state">False Stability</div>
-
 <div id="risk"></div>
-
-<p class="small">
-Failure does not begin when systems break.<br>
-It begins when correction capacity falls below drift pressure.
-</p>
-
+<p class="small">Failure begins when correction capacity falls below drift pressure.</p>
 </div>
 
 </div>
@@ -143,35 +86,60 @@ const ctx = canvas.getContext('2d');
 
 function resizeCanvas() {
   canvas.width = canvas.offsetWidth;
-  canvas.height = 200;
+  canvas.height = 220;
 }
 
-function drawDrift(d, p, a) {
+function drawDrift(d, p, a, c) {
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   let intensity = (d + p + a) / 300;
+  let thresholdY = canvas.height * (1 - c/100);
 
+  // draw threshold line
   ctx.beginPath();
-  ctx.moveTo(0, canvas.height);
-
-  for (let x = 0; x < canvas.width; x++) {
-    let t = x / canvas.width;
-    let y = Math.pow(t, 2 + intensity * 3);
-    ctx.lineTo(x, canvas.height - y * canvas.height);
-  }
-
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // threshold
-  ctx.beginPath();
-  ctx.setLineDash([5,5]);
-  ctx.moveTo(0, canvas.height * 0.5);
-  ctx.lineTo(canvas.width, canvas.height * 0.5);
+  ctx.setLineDash([6,6]);
+  ctx.moveTo(0, thresholdY);
+  ctx.lineTo(canvas.width, thresholdY);
   ctx.strokeStyle = "red";
   ctx.stroke();
   ctx.setLineDash([]);
+
+  // draw curve
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height);
+
+  let crossX = null;
+
+  for (let x = 0; x < canvas.width; x++) {
+    let t = x / canvas.width;
+    let yNorm = Math.pow(t, 2 + intensity * 3);
+    let y = canvas.height - yNorm * canvas.height;
+
+    if (!crossX && y <= thresholdY) crossX = x;
+
+    ctx.lineTo(x, y);
+  }
+
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // draw collapse point
+  if (crossX) {
+    ctx.beginPath();
+    ctx.arc(crossX, thresholdY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "red";
+    ctx.fill();
+  }
+
+  // draw moving dot (current system)
+  let currentX = canvas.width * intensity;
+  let currentY = canvas.height - Math.pow(intensity,2 + intensity*3)*canvas.height;
+
+  ctx.beginPath();
+  ctx.arc(currentX, currentY, 7, 0, Math.PI * 2);
+  ctx.fillStyle = "blue";
+  ctx.fill();
 }
 
 function update() {
@@ -195,7 +163,7 @@ function update() {
   else if (scaled < 70) state.textContent = "False Stability";
   else state.textContent = "Failure Trajectory";
 
-  drawDrift(d,p,a);
+  drawDrift(d,p,a,c);
 }
 
 [driftInput, pressureInput, ambiguityInput, capacityInput]

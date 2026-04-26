@@ -76,27 +76,45 @@ const risk = document.getElementById('risk');
 
 const canvas = document.getElementById('driftChart');
 const ctx = canvas.getContext('2d');
-canvas.width = canvas.offsetWidth;
-canvas.height = 200;
 
-function drawDrift() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 200;
+}
+
+function drawDrift(drift, pressure, ambiguity) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Combine inputs into "drift intensity"
+  let intensity = (drift + pressure + ambiguity) / 300;
 
   ctx.beginPath();
   ctx.moveTo(0, canvas.height);
 
-  for(let x=0;x<canvas.width;x++){
-    let t = x/canvas.width;
-    let y = Math.pow(t,2);
-    ctx.lineTo(x, canvas.height - y*canvas.height);
+  for (let x = 0; x < canvas.width; x++) {
+    let t = x / canvas.width;
+
+    // curve steepness increases with intensity
+    let y = Math.pow(t, 2 + intensity * 3);
+
+    ctx.lineTo(x, canvas.height - y * canvas.height);
   }
 
-  ctx.strokeStyle = '#000';
+  ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.stroke();
+
+  // threshold line
+  ctx.beginPath();
+  ctx.setLineDash([5,5]);
+  ctx.moveTo(0, canvas.height * 0.5);
+  ctx.lineTo(canvas.width, canvas.height * 0.5);
+  ctx.strokeStyle = "red";
+  ctx.stroke();
+  ctx.setLineDash([]);
 }
 
-function update(){
+function update() {
   let d = +driftInput.value;
   let p = +pressureInput.value;
   let a = +ambiguityInput.value;
@@ -107,23 +125,30 @@ function update(){
   ambiguityVal.textContent = a;
   capacityVal.textContent = c;
 
-  let raw = d+p+a-c;
-  let scaled = Math.max(0, Math.min(100, (raw+100)/3));
+  let raw = d + p + a - c;
+  let scaled = Math.max(0, Math.min(100, (raw + 100) / 3));
 
   risk.textContent = "Risk: " + Math.round(scaled);
 
-  if(scaled < 20) state.textContent = "Stable";
-  else if(scaled < 40) state.textContent = "Recoverable Drift";
-  else if(scaled < 70) state.textContent = "False Stability";
+  if (scaled < 20) state.textContent = "Stable";
+  else if (scaled < 40) state.textContent = "Recoverable Drift";
+  else if (scaled < 70) state.textContent = "False Stability";
   else state.textContent = "Failure Trajectory";
 
-  drawDrift();
+  drawDrift(d, p, a);
 }
 
-[driftInput,pressureInput,ambiguityInput,capacityInput].forEach(i=>i.addEventListener('input',update));
+[driftInput, pressureInput, ambiguityInput, capacityInput]
+  .forEach(i => i.addEventListener('input', update));
 
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  update();
+});
+
+resizeCanvas();
 update();
 </script>
-
+  
 </body>
 </html>

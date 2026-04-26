@@ -1,72 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Drift-Stability Visualizer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body { font-family: Arial, sans-serif; background:#f8fafc; margin:0; }
-.container { max-width:1000px; margin:auto; padding:20px; }
-.section { background:#fff; padding:20px; margin-bottom:20px; border:1px solid #ddd; }
-.row { display:flex; gap:20px; }
-.col { flex:1; }
-input[type=range] { width:100%; }
-canvas { width:100%; height:220px; }
-.status { font-size:26px; font-weight:bold; margin-bottom:10px; }
-.small { font-size:14px; color:#444; }
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<h1>Drift-Stability Visualizer</h1>
-<p><i>See instability before failure becomes visible.</i></p>
-
-<div class="section">
-<h2>1. Drift Accumulation</h2>
-<canvas id="driftChart"></canvas>
-<p class="small">Drift accelerates before visible failure. Crossing the threshold marks loss of recovery.</p>
-</div>
-
-<div class="row">
-
-<div class="section col">
-<h2>System Inputs</h2>
-<div class="small" style="margin-bottom:15px;">
-Adjust inputs to simulate system conditions.<br><br>
-• Drift = internal instability<br>
-• Pressure = external demand<br>
-• Ambiguity = signal uncertainty<br>
-• Correction Capacity = ability to fix
-</div>
-
-Drift: <span id="driftVal">70</span>
-<input id="drift" type="range" min="0" max="100" value="70">
-
-Pressure: <span id="pressureVal">60</span>
-<input id="pressure" type="range" min="0" max="100" value="60">
-
-Ambiguity: <span id="ambiguityVal">50</span>
-<input id="ambiguity" type="range" min="0" max="100" value="50">
-
-Correction Capacity: <span id="capacityVal">40</span>
-<input id="capacity" type="range" min="0" max="100" value="40">
-
-</div>
-
-<div class="section col">
-<h2>System State</h2>
-<div class="status" id="state">False Stability</div>
-<div id="risk"></div>
-<p class="small">Failure begins when correction capacity falls below drift pressure.</p>
-</div>
-
-</div>
-
-</div>
-
 <script>
 const driftInput = document.getElementById('drift');
 const pressureInput = document.getElementById('pressure');
@@ -90,34 +21,33 @@ function resizeCanvas() {
 }
 
 function drawDrift(d, p, a, c) {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   let intensity = (d + p + a) / 300;
-  let thresholdY = canvas.height * (1 - c/100);
+  let thresholdY = canvas.height * (1 - c / 100);
 
-  // draw threshold line
+  // threshold line
   ctx.beginPath();
-  ctx.setLineDash([6,6]);
+  ctx.setLineDash([6, 6]);
   ctx.moveTo(0, thresholdY);
   ctx.lineTo(canvas.width, thresholdY);
   ctx.strokeStyle = "red";
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // compute current position
+  // current position
   let currentX = canvas.width * intensity;
-  let currentY = canvas.height - Math.pow(intensity,2 + intensity*3)*canvas.height;
+  let currentY = canvas.height - Math.pow(intensity, 2 + intensity * 3) * canvas.height;
 
-  // determine if system has crossed threshold
   let crossed = currentY <= thresholdY;
 
-  // background tint when crossed
+  // background tint if crossed
   if (crossed) {
-    ctx.fillStyle = "rgba(255,0,0,0.05)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(255,0,0,0.06)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // draw curve
+  // curve
   ctx.beginPath();
   ctx.moveTo(0, canvas.height);
 
@@ -137,7 +67,7 @@ function drawDrift(d, p, a, c) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // draw collapse point
+  // collapse point
   if (crossX) {
     ctx.beginPath();
     ctx.arc(crossX, thresholdY, 6, 0, Math.PI * 2);
@@ -145,32 +75,10 @@ function drawDrift(d, p, a, c) {
     ctx.fill();
   }
 
-  // draw moving dot (current system)
+  // moving dot
   ctx.beginPath();
   ctx.arc(currentX, currentY, 7, 0, Math.PI * 2);
   ctx.fillStyle = crossed ? "red" : "blue";
-  ctx.fill();
-}
-
-  ctx.strokeStyle = "black";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // draw collapse point
-  if (crossX) {
-    ctx.beginPath();
-    ctx.arc(crossX, thresholdY, 6, 0, Math.PI * 2);
-    ctx.fillStyle = "red";
-    ctx.fill();
-  }
-
-  // draw moving dot (current system)
-  let currentX = canvas.width * intensity;
-  let currentY = canvas.height - Math.pow(intensity,2 + intensity*3)*canvas.height;
-
-  ctx.beginPath();
-  ctx.arc(currentX, currentY, 7, 0, Math.PI * 2);
-  ctx.fillStyle = "blue";
   ctx.fill();
 }
 
@@ -195,11 +103,11 @@ function update() {
   else if (scaled < 70) state.textContent = "False Stability";
   else state.textContent = "Failure Trajectory";
 
-  drawDrift(d,p,a,c);
+  drawDrift(d, p, a, c);
 }
 
 [driftInput, pressureInput, ambiguityInput, capacityInput]
-.forEach(i => i.addEventListener('input', update));
+  .forEach(i => i.addEventListener('input', update));
 
 window.addEventListener('resize', () => {
   resizeCanvas();
@@ -209,6 +117,3 @@ window.addEventListener('resize', () => {
 resizeCanvas();
 update();
 </script>
-
-</body>
-</html>

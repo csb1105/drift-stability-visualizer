@@ -2,9 +2,6 @@
 
 Structured analysis of systems before visible failure occurs.
 
-Discussion and deeper analysis:
-👉 https://prefailure.discourse.group
-
 ## Why this exists
 
 Most systems do not fail when they break.

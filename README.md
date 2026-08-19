@@ -18,6 +18,4 @@ Failure does not begin when systems break. It begins when correction capacity fa
 
 ## Contribute
 
-If you are analyzing systems where failure matters:
 
-👉 https://prefailure.discourse.group
